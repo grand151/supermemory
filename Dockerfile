@@ -27,10 +27,13 @@ RUN cargo install cargo-pgrx --version 0.12.5 --locked && \
     cargo pgrx init --pg17 pg_config
 
 # Clone and install pgvectorscale
+# Dodano RUSTFLAGS, aby włączyć funkcje AVX2 i FMA, które są wymagane przez kompilator Rust.
+# Opcjonalnie dodano 'cargo update -p pgrx' w celu aktualizacji zależności pgrx, co może pomóc w rozwiązaniu ostrzeżenia o 'pg12'.
 RUN cd /tmp && \
     git clone --branch 0.5.0 https://github.com/timescale/pgvectorscale && \
     cd pgvectorscale/pgvectorscale && \
-    cargo pgrx install --release
+    cargo update -p pgrx && \
+    RUSTFLAGS="-C target-feature=+avx2,+fma" cargo pgrx install --release
 
 # Create initialization script to enable both extensions
 RUN echo 'CREATE EXTENSION IF NOT EXISTS vector;' > /docker-entrypoint-initdb.d/01-init-vector.sql && \
